@@ -21,7 +21,11 @@ There are new additions to the app being explored in the Observation-Deluxe.wxg 
 The next most important functionalities to add: 
 
 1.Event Counters (as seen already in the .wxg file) 
+
 2.Some kind of ABC (Antecedent=>Behavior=>Consequence) observation protocol. 
+    *Revision April 11th: Upon further thought, I think things will probably get too complicated if I 
+    add an ABC tool as well. I will branch this to another separate application so I don't end up with a
+    an unholy mess. 
 
 The app as written in time.py has been distributed as an .exe all over the school building I work in. I'm eliciting feedback from my coworkers. The idea for event counters came from watching a teacher try to put tally marks inside of the notes textctrl. 
 
