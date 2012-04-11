@@ -27,3 +27,8 @@ The app as written in time.py has been distributed as an .exe all over the schoo
 
 *********************************************************************************************************
  
+April 10th, 2012 
+
+Added observatory.py, which is the first draft of the wx code merged with the actual functioning code. Right now it's just the task timer, debugged and optimized for the linux environment. Programming the additions textctrl and buttons is the next task. First I'll have to figure out how I want the .txt file to look when everything is done. 
+
+I figured out why files were saving to the next directory higher with a \ in the title. It's because I had the string set up for Windows, since the file dialog was originally put there for windows users. I have since reversed it and everything works fine. I will need to remember to reverse it again when I port.  
