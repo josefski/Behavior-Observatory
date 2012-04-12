@@ -21,13 +21,22 @@ off=[]
 on=[]
 ontotal=[]
 offtotal=[]
-slf_rdr=[] 
-peer_rdr=[]
-tchr_rdr=[]
-rdr_peer=[]
+slf_rdr=["SELF"] 
+peer_rdr=["PEER"]
+tchr_rdr=["TEACHER"]
+rdr_peer=["REDIRECTED"]
 redirect_times=[]#stores the system time of each redirect
 redirect_interval=[]#stores the intervals between each redirect event 
 interval_labels=[] 
+rpt1=[]
+rpt2=[]
+rpt3=[]
+rpt1i=[]
+rpt2i=[]
+rpt3i=[]
+rpt1n=[]
+rpt2n=[]
+rpt3n=[]
 
 class Dialog1(wx.Dialog):
     def __init__(self, *args, **kwds):
@@ -45,11 +54,11 @@ class Dialog1(wx.Dialog):
         self.notes_box = wx.TextCtrl(self, -1, "\n", style=wx.TE_MULTILINE|wx.TE_LINEWRAP|wx.TE_WORDWRAP)
         self.save_quit = wx.Button(self, -1, "Save and Quit")
         self.re_title = wx.StaticText(self, -1, "Record Repetitive Events")
-        self.re_txt_1 = wx.TextCtrl(self, -1, "Repetitive Event")
+        self.re_txt_1 = wx.TextCtrl(self, -1, "Repetitive Behavior")
         self.count_1 = wx.Button(self, -1, "Record")
-        self.re_txt_2 = wx.TextCtrl(self, -1, "Repetitive Event")
+        self.re_txt_2 = wx.TextCtrl(self, -1, "Repetitive Behavior")
         self.count_2 = wx.Button(self, -1, "Record")
-        self.re_txt_3 = wx.TextCtrl(self, -1, "Repetitive Event ")
+        self.re_txt_3 = wx.TextCtrl(self, -1, "Repetitive Behavior")
         self.count_3 = wx.Button(self, -1, "Record")
         self.static_line_rep = wx.StaticLine(self, -1)
         self.rd_title = wx.StaticText(self, -1, "Record Redirects")
@@ -77,7 +86,10 @@ class Dialog1(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.self_redirect, self.slf_rd_btn)
         self.Bind(wx.EVT_BUTTON, self.peer_redirect, self.pr_rd_btn)
         self.Bind(wx.EVT_BUTTON, self.teacher_redirect, self.tch_rd_btn)
-        self.Bind(wx.EVT_BUTTON, self.redirect_peer, self.rd_pr_btn) 
+        self.Bind(wx.EVT_BUTTON, self.redirect_peer, self.rd_pr_btn)
+        self.Bind(wx.EVT_BUTTON, self.repeat_behavior_1, self.count_1)
+        self.Bind(wx.EVT_BUTTON, self.repeat_behavior_2, self.count_2) 
+        self.Bind(wx.EVT_BUTTON, self.repeat_behavior_3, self.count_3)
         
         self.time_button.Enable(False)
         
@@ -179,6 +191,8 @@ class Dialog1(wx.Dialog):
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "w") 
         text_file.write("OBSERVATION REPORT FOR: %s %s   " % (first, last))
         text_file.write("%s" % (date_time))
+        observer = self.observer_first.GetValue()
+        text_file.write("\nObservation Performed By: %s" % observer)
         text_file.write('\n')
         text_file.write('----------------------------------------------------------------------------')
         text_file.write('\n')
@@ -188,7 +202,8 @@ class Dialog1(wx.Dialog):
         self.time_button.Enable(True)
         self.last_name_txt.Enable(False) 
         self.first_name_txt.Enable(False)
-        self.save_names.Enable(False)    
+        self.save_names.Enable(False) 
+        self.observer_first.Enable(False)    
 
     def time_event(self, event):
         a.append(1) 
@@ -235,7 +250,8 @@ class Dialog1(wx.Dialog):
             text_file.write("==>%s" % (notes))
             text_file.write('\n')
             text_file.write("-----------------------------------------------------------") 
-            text_file.write('\n')  
+            text_file.write('\n')
+            text_file.write("\nBEGIN OFF TASK RECORDING:\n")
             self.notes_box.Clear()
             self.save_quit.Enable(True)
             self.SetBackgroundColour(wx.LIGHT_GREY)
@@ -274,6 +290,7 @@ class Dialog1(wx.Dialog):
             text_file.write('\n')
             text_file.write('-----------------------------------------------------------')
             text_file.write('\n')
+            text_file.write('\nBEGIN ON TASK RECORDING:\n')
             self.notes_box.Clear()
             self.save_quit.Enable(True) 
 
@@ -281,8 +298,9 @@ class Dialog1(wx.Dialog):
         redirect_times.insert(0,0)
         m1 = time.time()
         m2 = redirect_times.pop()
-        delta = m1 - m2
+        delta_raw = m1 - m2
         redirect_times.append(m1)
+        delta = round(delta_raw, 2) 
         redirect_interval.append(delta)
         interval_labels.append("self") 
             
@@ -297,15 +315,17 @@ class Dialog1(wx.Dialog):
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
         #Add the human readable name of the event and the time of day to the text file 
         text_file.write("\nSELF REDIRECT: %s \n" % self_tod) 
-        rd_cnt = len(slf_rdr) #Get a running length of the list 
-        self.slf_rd_cnt.SetLabel("%s" % rd_cnt) #Advance the counter
+        rd_cnt = len(slf_rdr) #Get a running length of the list
+        cnt = rd_cnt - 1 
+        self.slf_rd_cnt.SetLabel("%s" % cnt) #Advance the counter
         
     def peer_redirect(self, event): #Same thing as above
         redirect_times.insert(0,0)
         m1 = time.time()
         m2 = redirect_times.pop()
-        delta = m1 - m2
+        delta_raw = m1 - m2
         redirect_times.append(m1)
+        delta = round(delta_raw, 2)
         redirect_interval.append(delta)
         interval_labels.append("peer")
         
@@ -317,14 +337,16 @@ class Dialog1(wx.Dialog):
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
         text_file.write("\nPEER REDIRECT: %s\n" % peer_tod)
         peer_cnt = len(peer_rdr)
-        self.pr_rd_cnt.SetLabel("%s" % peer_cnt) 
+        peer = peer_cnt - 1
+        self.pr_rd_cnt.SetLabel("%s" % peer) 
     
     def teacher_redirect(self, event):
         redirect_times.insert(0,0)
         m1 = time.time()
         m2 = redirect_times.pop()
-        delta = m1 - m2
+        delta_raw = m1 - m2
         redirect_times.append(m1)
+        delta = round(delta_raw, 2)
         redirect_interval.append(delta)
         interval_labels.append("teacher") 
         
@@ -336,7 +358,8 @@ class Dialog1(wx.Dialog):
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
         text_file.write("\nTEACHER REDIRECT: %s\n" % tch_tod)
         tch_cnt = len(tchr_rdr)
-        self.tch_rd_cnt.SetLabel("%s" % tch_cnt) 
+        tch = tch_cnt - 1 
+        self.tch_rd_cnt.SetLabel("%s" % tch) 
         
     def redirect_peer(self, event): 
         pr_tod = strftime("%H:%M:%S")
@@ -347,35 +370,163 @@ class Dialog1(wx.Dialog):
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
         text_file.write("\nREDIRECTED PEER: %s\n" % pr_tod)
         pr_cnt = len(rdr_peer)
-        self.rd_pr_cnt.SetLabel("%s" % pr_cnt)  
+        pr = pr_cnt - 1
+        self.rd_pr_cnt.SetLabel("%s" % pr) 
         
-    
-
-
+    def repeat_behavior_1(self, event):
+        rpt1n.insert(0,0) 
+        r1 = time.time()
+        r2 = rpt1n.pop()
+        delta_raw = r1 - r2
+        rpt1n.append(r1) 
+        delta = round(delta_raw, 2) 
+        rpt1i.append(delta)
+        repeat_tod = strftime("%H:%M:%S")
+        repeat_value = self.re_txt_1.GetValue()
+        if len(rpt1) == 0:
+            rpt1.insert(0, repeat_value) 
+        first = self.first_name_txt.GetValue() 
+        last = self.last_name_txt.GetValue()
+        directory = self.dirname
+        text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        text_file.write("\n%s: %s\n" % (repeat_value, repeat_tod)) 
+        rpt1.append(repeat_tod)
+        rep1 = len(rpt1) - 1 
+        self.cnt_1.SetLabel("%s" % rep1) 
+        self.re_1_lbl.SetLabel("%s" % repeat_value) 
+        
+    def repeat_behavior_2(self, event):
+        rpt2n.insert(0,0)
+        r1 = time.time()
+        r2 = rpt2n.pop()
+        delta_raw = r1 - r2
+        rpt2n.append(r1) 
+        delta = round(delta_raw, 2)
+        rpt2i.append(delta)
+        repeat_tod = strftime("%H:%M:%S")
+        repeat_value = self.re_txt_2.GetValue()
+        if len(rpt2) == 0:
+            rpt2.insert(0, repeat_value)
+        first = self.first_name_txt.GetValue() 
+        last = self.last_name_txt.GetValue()
+        directory = self.dirname
+        text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        text_file.write("\n%s: %s\n" % (repeat_value, repeat_tod)) 
+        rpt2.append(repeat_tod)
+        rep2 = len(rpt2) - 1 
+        self.cnt_2.SetLabel("%s" % rep2) 
+        self.re_2_lbl.SetLabel("%s" % repeat_value)
+        
+    def repeat_behavior_3(self, event): 
+        rpt3n.insert(0,0)
+        r1 = time.time()
+        r2 = rpt3n.pop()
+        delta_raw = r1 - r2
+        rpt3n.append(r1) 
+        delta = round(delta_raw, 2)
+        rpt3i.append(delta)
+        repeat_tod = strftime("%H:%M:%S")
+        repeat_value = self.re_txt_3.GetValue()
+        if len(rpt3) == 0:
+            rpt3.insert(0, repeat_value)
+        first = self.first_name_txt.GetValue() 
+        last = self.last_name_txt.GetValue()
+        directory = self.dirname
+        text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        text_file.write("\n%s: %s\n" % (repeat_value, repeat_tod)) 
+        rpt3.append(repeat_tod)
+        rep3 = len(rpt3) - 1 
+        self.cnt_3.SetLabel("%s" % rep3) 
+        self.re_3_lbl.SetLabel("%s" % repeat_value)
+         
+        
+        
     def filefunc(self, event): #Writes the contents of the task lists to the .csv file and appends all the summary information to the text file.
-        redirect_interval.pop(0)
-        redirect_interval.insert(0, "Start") 
+        lenr = len(redirect_interval)
+        len1 = len(rpt1i)
+        len2 = len(rpt2i)
+        len3 = len(rpt3i) 
+        repeat_value1 = self.re_txt_1.GetValue()
+        repeat_value2 = self.re_txt_2.GetValue()
+        repeat_value3 = self.re_txt_3.GetValue()
+        if lenr > 0:
+            redirect_interval.pop(0)
+            redirect_interval.insert(0, "Interval") 
+        if len1 > 0:
+            rpt1i.pop(0) 
+            rpt1i.insert(0, "%s Int" % repeat_value1)
+        if len2 > 0:
+            rpt2i.pop(0)
+            rpt2i.insert(0, "%s Int" % repeat_value2)
+        if len3 > 0:
+            rpt3i.pop(0)
+            rpt3i.insert(0, "%s Int" % repeat_value3)
+            
         firstname = self.first_name_txt.GetValue() 
         lastname = self.last_name_txt.GetValue() 
         directory = self.dirname
+        
         writefile = csv.writer(open('%s/%s_%s.csv' % (directory, firstname, lastname), 'wb'), delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        empty_row = ("") 
         writefile.writerow(OnTask)
         writefile.writerow(OffTask)
+        writefile.writerow(empty_row)
         writefile.writerow(interval_labels)
         writefile.writerow(redirect_interval)
-        #self.welcome.SetLabel("Saved") 
+        writefile.writerow(empty_row)
+        writefile.writerow(slf_rdr)
+        writefile.writerow(tchr_rdr)
+        writefile.writerow(peer_rdr)
+        writefile.writerow(rdr_peer)
+        writefile.writerow(empty_row)
+        writefile.writerow(rpt1)
+        writefile.writerow(rpt1i)
+        writefile.writerow(rpt2)
+        writefile.writerow(rpt2i) 
+        writefile.writerow(rpt3)
+        writefile.writerow(rpt3i)
+        #self.welcome.SetLabel("Saved")
+         
         total_off = sum(offtotal)
         total_on = sum(ontotal) 
+        
         final_notes = self.notes_box.GetValue() 
         first = self.first_name_txt.GetValue()
         last = self.last_name_txt.GetValue()
+        observer = self.observer_first.GetValue()
+         
         total_self = len(slf_rdr) #Get the number of self redirects that happened
         total_peer = len(peer_rdr)
         total_teacher = len(tchr_rdr) 
         total_redirect_peer = len(rdr_peer)
-        redirect_interval.pop(0)
-        average_interval = float(sum(redirect_interval) / len(redirect_interval))
-        average = round(average_interval, 2) 
+        total_rpt1 = len(rpt1) 
+        total_rpt2 = len(rpt2)
+        total_rpt3 = len(rpt3) 
+        
+        if lenr > 1:
+            redirect_interval.pop(0)
+            average_interval = float(sum(redirect_interval) / len(redirect_interval))
+            average = round(average_interval, 2)
+            
+        if len1 > 1: 
+            rpt1i.pop(0) 
+            avg = float(sum(rpt1i) / len(rpt1i))
+            event1i = round(avg, 2)
+        else: 
+            event1i = 0
+        if len2 > 1:
+            rpt2i.pop(0)
+            avg2 = float(sum(rpt2i) / len(rpt2i))
+            event2i = round(avg2, 2)
+        else:
+            event2i = 0
+        if len3 > 1:
+            rpt3i.pop(0)
+            avg3 = float(sum(rpt3i) / len(rpt3i))
+            event3i = round(avg3, 2)
+        else:
+            event3i = 0
+         
         directory = self.dirname
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
         text_file.write('\n')
@@ -385,18 +536,42 @@ class Dialog1(wx.Dialog):
         text_file.write('%s' % (final_notes))
         text_file.write('\n')
         text_file.write('\n')
-        text_file.write('Total time on task: %s' % (total_on))
-        text_file.write('\n')
-        text_file.write('Total time off task: %s' % (total_off))
-        text_file.write('\n')
-        text_file.write("Total Self Redirects: %s\n" % total_self) #Add that number to the bottom of the file
-        text_file.write("Total Peer Redirects: %s\n" % total_peer)
-        text_file.write("Total Teacher Redirects: %s\n" % total_teacher)
-        text_file.write("Redirected a Peer: %s times.\n" % total_redirect_peer) 
-        text_file.write("Average Time Between Redirects: %s sec\n" % average)  
+        if total_on != 0:
+            text_file.write('Total time on task: %s' % (total_on))
+            text_file.write('\n')
+        if total_off != 0:
+            text_file.write('Total time off task: %s' % (total_off))
+            text_file.write('\n')
+        if total_self != 0:    
+            text_file.write("Total Self Redirects: %s\n" % total_self) #Add that number to the bottom of the file
+        if total_peer !=0:
+            text_file.write("Total Peer Redirects: %s\n" % total_peer)
+        if total_teacher != 0:
+            text_file.write("Total Teacher Redirects: %s\n" % total_teacher)
+        if total_redirect_peer != 0:
+            text_file.write("Redirected a Peer: %s times.\n" % total_redirect_peer)
+        
+        rpt1_1 = len(rpt1) 
+        rpt1v = rpt1_1 - 1
+        rpt2v = len(rpt2) - 1
+        rpt3v = len(rpt3) - 1 
+        if event1i != 0:
+            text_file.write("Total Number of %s: %s\n" % (repeat_value1, rpt1v))  
+            text_file.write("Average time between %s: %s\n" % (repeat_value1, event1i))
+        if event2i != 0:
+            text_file.write("Total Number of %s: %s\n" % (repeat_value2, rpt2v))  
+            text_file.write("Average time between %s: %s\n" % (repeat_value2, event2i))
+        if event3i != 0:
+            text_file.write("Total Number of %s: %s\n" % (repeat_value3, rpt3v))  
+            text_file.write("Average time between %s: %s\n" % (repeat_value3, event3i))
+        
+        if lenr > 1:
+            text_file.write("Average Time Between Redirects: %s sec\n" % average)  
         date_time = strftime("\n%Y-%m-%d %H:%M:%S") 
         text_file.write("\nEND OF REPORT" '\n')
-        text_file.write("%s" % (date_time)) 
+        text_file.write("%s" % (date_time))
+        text_file.write("\n\n\n\nSIGNED:______________________________________\n") 
+        text_file.write("         %s" % observer) 
         print interval_labels
         self.Close(True) 
         self.Destroy()
