@@ -21,7 +21,13 @@ off=[]
 on=[]
 ontotal=[]
 offtotal=[]
-
+slf_rdr=[] 
+peer_rdr=[]
+tchr_rdr=[]
+rdr_peer=[]
+redirect_times=[]#stores the system time of each redirect
+redirect_interval=[]#stores the intervals between each redirect event 
+interval_labels=[] 
 
 class Dialog1(wx.Dialog):
     def __init__(self, *args, **kwds):
@@ -68,6 +74,10 @@ class Dialog1(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.time_event, self.time_button)
         self.Bind(wx.EVT_BUTTON, self.filefunc, self.save_quit)
         self.Bind(wx.EVT_BUTTON, self.header, self.save_names)
+        self.Bind(wx.EVT_BUTTON, self.self_redirect, self.slf_rd_btn)
+        self.Bind(wx.EVT_BUTTON, self.peer_redirect, self.pr_rd_btn)
+        self.Bind(wx.EVT_BUTTON, self.teacher_redirect, self.tch_rd_btn)
+        self.Bind(wx.EVT_BUTTON, self.redirect_peer, self.rd_pr_btn) 
         
         self.time_button.Enable(False)
         
@@ -153,7 +163,8 @@ class Dialog1(wx.Dialog):
         sizer_main.Fit(self)
         self.Layout()
         # end wxGlade
-
+       
+        
 # end of class Dialog1
 
     def header(self, event, **dialogOptions):  
@@ -266,19 +277,105 @@ class Dialog1(wx.Dialog):
             self.notes_box.Clear()
             self.save_quit.Enable(True) 
 
-    def filefunc(self, event):
+    def self_redirect(self, event): #Records the time a redirect happened in line with the on-task, off-task records and a tally summary appended to the bottom of the text file
+        redirect_times.insert(0,0)
+        m1 = time.time()
+        m2 = redirect_times.pop()
+        delta = m1 - m2
+        redirect_times.append(m1)
+        redirect_interval.append(delta)
+        interval_labels.append("self") 
+            
+        self_tod = strftime("%H:%M:%S") #Record the time of day    
+        slf_rdr.append(self_tod) #Put it in a list
+        
+        #Now, get all the variables needed to open and append the right text file
+        first = self.first_name_txt.GetValue() 
+        last = self.last_name_txt.GetValue() 
+        directory = self.dirname
+        #Open it
+        text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        #Add the human readable name of the event and the time of day to the text file 
+        text_file.write("\nSELF REDIRECT: %s \n" % self_tod) 
+        rd_cnt = len(slf_rdr) #Get a running length of the list 
+        self.slf_rd_cnt.SetLabel("%s" % rd_cnt) #Advance the counter
+        
+    def peer_redirect(self, event): #Same thing as above
+        redirect_times.insert(0,0)
+        m1 = time.time()
+        m2 = redirect_times.pop()
+        delta = m1 - m2
+        redirect_times.append(m1)
+        redirect_interval.append(delta)
+        interval_labels.append("peer")
+        
+        peer_tod = strftime("%H:%M:%S")
+        peer_rdr.append(peer_tod)
+        first = self.first_name_txt.GetValue() 
+        last = self.last_name_txt.GetValue() 
+        directory = self.dirname
+        text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        text_file.write("\nPEER REDIRECT: %s\n" % peer_tod)
+        peer_cnt = len(peer_rdr)
+        self.pr_rd_cnt.SetLabel("%s" % peer_cnt) 
+    
+    def teacher_redirect(self, event):
+        redirect_times.insert(0,0)
+        m1 = time.time()
+        m2 = redirect_times.pop()
+        delta = m1 - m2
+        redirect_times.append(m1)
+        redirect_interval.append(delta)
+        interval_labels.append("teacher") 
+        
+        tch_tod = strftime("%H:%M:%S")
+        tchr_rdr.append(tch_tod) 
+        first = self.first_name_txt.GetValue() 
+        last = self.last_name_txt.GetValue() 
+        directory = self.dirname
+        text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        text_file.write("\nTEACHER REDIRECT: %s\n" % tch_tod)
+        tch_cnt = len(tchr_rdr)
+        self.tch_rd_cnt.SetLabel("%s" % tch_cnt) 
+        
+    def redirect_peer(self, event): 
+        pr_tod = strftime("%H:%M:%S")
+        rdr_peer.append(pr_tod) 
+        first = self.first_name_txt.GetValue() 
+        last = self.last_name_txt.GetValue() 
+        directory = self.dirname
+        text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        text_file.write("\nREDIRECTED PEER: %s\n" % pr_tod)
+        pr_cnt = len(rdr_peer)
+        self.rd_pr_cnt.SetLabel("%s" % pr_cnt)  
+        
+    
+
+
+    def filefunc(self, event): #Writes the contents of the task lists to the .csv file and appends all the summary information to the text file.
+        redirect_interval.pop(0)
+        redirect_interval.insert(0, "Start") 
         firstname = self.first_name_txt.GetValue() 
         lastname = self.last_name_txt.GetValue() 
         directory = self.dirname
         writefile = csv.writer(open('%s/%s_%s.csv' % (directory, firstname, lastname), 'wb'), delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writefile.writerow(OnTask)
         writefile.writerow(OffTask)
+        writefile.writerow(interval_labels)
+        writefile.writerow(redirect_interval)
         #self.welcome.SetLabel("Saved") 
         total_off = sum(offtotal)
         total_on = sum(ontotal) 
         final_notes = self.notes_box.GetValue() 
         first = self.first_name_txt.GetValue()
         last = self.last_name_txt.GetValue()
+        total_self = len(slf_rdr) #Get the number of self redirects that happened
+        total_peer = len(peer_rdr)
+        total_teacher = len(tchr_rdr) 
+        total_redirect_peer = len(rdr_peer)
+        redirect_interval.pop(0)
+        average_interval = float(sum(redirect_interval) / len(redirect_interval))
+        average = round(average_interval, 2) 
         directory = self.dirname
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
         text_file.write('\n')
@@ -292,11 +389,15 @@ class Dialog1(wx.Dialog):
         text_file.write('\n')
         text_file.write('Total time off task: %s' % (total_off))
         text_file.write('\n')
-        
-        
-        date_time = strftime("%Y-%m-%d %H:%M:%S") 
-        text_file.write("END OF REPORT" '\n')
+        text_file.write("Total Self Redirects: %s\n" % total_self) #Add that number to the bottom of the file
+        text_file.write("Total Peer Redirects: %s\n" % total_peer)
+        text_file.write("Total Teacher Redirects: %s\n" % total_teacher)
+        text_file.write("Redirected a Peer: %s times.\n" % total_redirect_peer) 
+        text_file.write("Average Time Between Redirects: %s sec\n" % average)  
+        date_time = strftime("\n%Y-%m-%d %H:%M:%S") 
+        text_file.write("\nEND OF REPORT" '\n')
         text_file.write("%s" % (date_time)) 
+        print interval_labels
         self.Close(True) 
         self.Destroy()
         
