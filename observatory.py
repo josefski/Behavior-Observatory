@@ -41,24 +41,25 @@ rpt3n=[]
 class Dialog1(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: Dialog1.__init__
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX|wx.STAY_ON_TOP
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
-        
+        self.welcome = wx.StaticText(self, -1, "Thank you for using FBA Machine. \nStart by entering the first and last \nnames of the student and then your name.")
         self.first_name_txt = wx.TextCtrl(self, -1, "Enter Student First Name Here")
         self.last_name_txt = wx.TextCtrl(self, -1, "Enter Student Last Name Here")
         self.observer_first = wx.TextCtrl(self, -1, "Enter Your Name Here")
         self.static_line_1 = wx.StaticLine(self, -1)
         self.save_names = wx.Button(self, -1, "Fill Out Information Above, Then Press Here")
+        self.label_directions = wx.StaticText(self, -1, "The widget underneath this message\nis the task timer. Push the \"TIME\" button \nand see what happens.")
         self.static_line_2 = wx.StaticLine(self, -1)
         self.time_button = wx.Button(self, -1, "TIME")
         self.notes_box = wx.TextCtrl(self, -1, "\n", style=wx.TE_MULTILINE|wx.TE_LINEWRAP|wx.TE_WORDWRAP)
         self.save_quit = wx.Button(self, -1, "Save and Quit")
         self.re_title = wx.StaticText(self, -1, "Record Repetitive Events")
-        self.re_txt_1 = wx.TextCtrl(self, -1, "Repetitive Behavior")
+        self.re_txt_1 = wx.TextCtrl(self, -1, "Repetitive Event")
         self.count_1 = wx.Button(self, -1, "Record")
-        self.re_txt_2 = wx.TextCtrl(self, -1, "Repetitive Behavior")
+        self.re_txt_2 = wx.TextCtrl(self, -1, "Repetitive Event")
         self.count_2 = wx.Button(self, -1, "Record")
-        self.re_txt_3 = wx.TextCtrl(self, -1, "Repetitive Behavior")
+        self.re_txt_3 = wx.TextCtrl(self, -1, "Repetitive Event ")
         self.count_3 = wx.Button(self, -1, "Record")
         self.static_line_rep = wx.StaticLine(self, -1)
         self.rd_title = wx.StaticText(self, -1, "Record Redirects")
@@ -70,16 +71,33 @@ class Dialog1(wx.Dialog):
         self.tch_rd_cnt = wx.StaticText(self, -1, "0")
         self.rd_pr_btn = wx.Button(self, -1, "Redirected Peer")
         self.rd_pr_cnt = wx.StaticText(self, -1, "0")
+        self.hint = wx.StaticText(self, -1, "\nHINT: You can use\nTAB and SHIFT + TAB\nto navigate around\nthe application and \"ENTER\"\nto activate buttons.")
         self.re_1_lbl = wx.StaticText(self, -1, "Repetive Event Count ")
         self.cnt_1 = wx.StaticText(self, -1, "0")
         self.re_2_lbl = wx.StaticText(self, -1, "Repetive Event Count")
         self.cnt_2 = wx.StaticText(self, -1, "0")
         self.re_3_lbl = wx.StaticText(self, -1, "Repetitive Event Count")
         self.cnt_3 = wx.StaticText(self, -1, "0")
-        self.help = wx.Button(self, -1, "HELP!")
+        self.setting_events = wx.StaticText(self, -1, "Record Setting Events")
+        self.setting_get = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE|wx.TE_LINEWRAP|wx.TE_WORDWRAP)
+        self.help = wx.Button(self, -1, "Read Me")
         self.about = wx.Button(self, -1, "About")
-        
-        #Bindings
+        self.Copyright = wx.StaticText(self, -1, "Josef Hoffman\n(C) 2012")
+        self.bitmap_1 = wx.StaticBitmap(self, -1, wx.Bitmap("/home/josef/Behavior-Observatory/gplv3-127x51.png", wx.BITMAP_TYPE_ANY))
+
+        self.__set_properties()
+        self.__do_layout()
+        # end wxGlade
+        self.time_button.Enable(False)
+        self.save_quit.Enable(False)
+        self.slf_rd_btn.Enable(False)
+        self.tch_rd_btn.Enable(False)
+        self.rd_pr_btn.Enable(False)
+        self.count_1.Enable(False)
+        self.count_2.Enable(False) 
+        self.count_3.Enable(False)
+         
+#Bindings
         self.Bind(wx.EVT_BUTTON, self.time_event, self.time_button)
         self.Bind(wx.EVT_BUTTON, self.filefunc, self.save_quit)
         self.Bind(wx.EVT_BUTTON, self.header, self.save_names)
@@ -90,13 +108,8 @@ class Dialog1(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.repeat_behavior_1, self.count_1)
         self.Bind(wx.EVT_BUTTON, self.repeat_behavior_2, self.count_2) 
         self.Bind(wx.EVT_BUTTON, self.repeat_behavior_3, self.count_3)
+        self.Bind(wx.EVT_BUTTON, self.OnAboutBox, self.about)
         
-        self.time_button.Enable(False)
-        
-        self.__set_properties()
-        self.__do_layout()
-        # end wxGlade
-
     def __set_properties(self):
         # begin wxGlade: Dialog1.__set_properties
         self.SetTitle("Behavior Observatory")
@@ -110,12 +123,15 @@ class Dialog1(wx.Dialog):
         self.re_txt_2.SetMinSize((160, 28))
         self.re_txt_3.SetMinSize((160, 28))
         self.static_line_rep.SetMinSize((184, 3))
+        self.setting_events.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "Cantarell"))
+        self.setting_get.SetMinSize((205, 150))
         # end wxGlade
 
     def __do_layout(self):
         # begin wxGlade: Dialog1.__do_layout
         sizer_main = wx.BoxSizer(wx.HORIZONTAL)
         rpt_events_ct_sz = wx.BoxSizer(wx.VERTICAL)
+        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
         rpt_events_sz = wx.BoxSizer(wx.VERTICAL)
         rd_pr = wx.BoxSizer(wx.HORIZONTAL)
         tch_rd = wx.BoxSizer(wx.HORIZONTAL)
@@ -126,6 +142,7 @@ class Dialog1(wx.Dialog):
         observer_name_sz = wx.BoxSizer(wx.HORIZONTAL)
         last_name_sz = wx.BoxSizer(wx.HORIZONTAL)
         first_name_sz = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_left.Add(self.welcome, 0, 0, 0)
         first_name_sz.Add(self.first_name_txt, 0, 0, 0)
         sizer_left.Add(first_name_sz, 1, 0, 0)
         last_name_sz.Add(self.last_name_txt, 0, 0, 0)
@@ -135,6 +152,7 @@ class Dialog1(wx.Dialog):
         sizer_left.Add(self.static_line_1, 0, wx.EXPAND, 0)
         name_saver_sz.Add(self.save_names, 0, 0, 0)
         sizer_left.Add(name_saver_sz, 1, wx.EXPAND, 0)
+        sizer_left.Add(self.label_directions, 0, 0, 0)
         sizer_left.Add(self.static_line_2, 0, wx.EXPAND, 0)
         sizer_left.Add(self.time_button, 0, 0, 0)
         sizer_left.Add(self.notes_box, 0, 0, 0)
@@ -161,6 +179,7 @@ class Dialog1(wx.Dialog):
         rd_pr.Add(self.rd_pr_btn, 0, 0, 0)
         rd_pr.Add(self.rd_pr_cnt, 0, 0, 0)
         rpt_events_sz.Add(rd_pr, 1, wx.EXPAND, 0)
+        rpt_events_sz.Add(self.hint, 0, 0, 0)
         sizer_main.Add(rpt_events_sz, 0, wx.ALL, 3)
         rpt_events_ct_sz.Add(self.re_1_lbl, 0, 0, 0)
         rpt_events_ct_sz.Add(self.cnt_1, 0, 0, 0)
@@ -168,8 +187,15 @@ class Dialog1(wx.Dialog):
         rpt_events_ct_sz.Add(self.cnt_2, 0, 0, 0)
         rpt_events_ct_sz.Add(self.re_3_lbl, 0, 0, 0)
         rpt_events_ct_sz.Add(self.cnt_3, 0, 0, 0)
+        rpt_events_ct_sz.Add((205, 20), 0, 0, 0)
+        rpt_events_ct_sz.Add(self.setting_events, 0, 0, 0)
+        rpt_events_ct_sz.Add(self.setting_get, 0, 0, 0)
         rpt_events_ct_sz.Add(self.help, 0, 0, 0)
         rpt_events_ct_sz.Add(self.about, 0, 0, 0)
+        rpt_events_ct_sz.Add((205, 30), 0, 0, 0)
+        sizer_1.Add(self.Copyright, 0, 0, 0)
+        sizer_1.Add(self.bitmap_1, 0, 0, 0)
+        rpt_events_ct_sz.Add(sizer_1, 1, wx.EXPAND, 0)
         sizer_main.Add(rpt_events_ct_sz, 0, wx.ALL, 3)
         self.SetSizer(sizer_main)
         sizer_main.Fit(self)
@@ -200,6 +226,13 @@ class Dialog1(wx.Dialog):
         text_file.write('\n')
         text_file.write('\n')
         self.time_button.Enable(True)
+        self.save_quit.Enable(True)
+        self.slf_rd_btn.Enable(True)
+        self.tch_rd_btn.Enable(True)
+        self.rd_pr_btn.Enable(True)
+        self.count_1.Enable(True)
+        self.count_2.Enable(True) 
+        self.count_3.Enable(True)
         self.last_name_txt.Enable(False) 
         self.first_name_txt.Enable(False)
         self.save_names.Enable(False) 
@@ -217,15 +250,15 @@ class Dialog1(wx.Dialog):
         if countfinal == 1:
             on_start = time.time()
             ot.append(on_start) 
-            #self.welcome.SetLabel("Timing On Task Event")
+            self.welcome.SetLabel("Timing On Task Event")
             first = self.first_name_txt.GetValue() 
-            #self.label_directions.SetLabel("Timing On Task Event")
+            self.label_directions.SetLabel("Timing On Task Event\nRecord Notes Below")
             self.SetBackgroundColour(wx.GREEN)
             self.Refresh()  
             on.append(1)
-            #size = 18 
-            #font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
-            #self.label_directions.SetFont(font)  
+            size = 18 
+            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+            self.label_directions.SetFont(font)  
             self.save_quit.Enable(False)                    
             
         if countfinal == 2: 
@@ -236,7 +269,11 @@ class Dialog1(wx.Dialog):
             OnTask.append(on_task)   
             self.SetBackgroundColour(wx.LIGHT_GREY)
             self.Refresh()
-            #self.label_directions.SetLabel("Click TIME to record off-task event")             
+            self.welcome.SetLabel("Timed On-Task Event") 
+            size = 10 
+            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+            self.label_directions.SetFont(font)
+            self.label_directions.SetLabel("Click TIME to record off-task event")             
             notes = self.notes_box.GetValue()
             first = self.first_name_txt.GetValue()
             last = self.last_name_txt.GetValue()
@@ -261,9 +298,12 @@ class Dialog1(wx.Dialog):
             oft.append(start_off) 
             self.SetBackgroundColour(wx.RED) 
             self.Refresh()
+            size = 18 
+            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+            self.label_directions.SetFont(font)
             #first = self.name_first.GetValue()
-            #self.welcome.SetLabel("Timing Off Task Event")
-            #self.label_directions.SetLabel("Timing off-task event.\n Record Notes Below") 
+            self.welcome.SetLabel("Timing Off Task Event")
+            self.label_directions.SetLabel("Timing off-task event\nRecord Notes Below") 
             off.append(1)
             self.save_quit.Enable(False) 
             
@@ -276,7 +316,11 @@ class Dialog1(wx.Dialog):
             self.SetBackgroundColour(wx.LIGHT_GREY)
             self.Refresh()
             notes2 = self.notes_box.GetValue()
-            #self.welcome.SetLabel("Indeterminate")   
+            self.welcome.SetLabel("Timed Off-Task Event") 
+            size = 10 
+            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+            self.label_directions.SetFont(font)
+            self.label_directions.SetLabel("Click TIME to record on-task event")  
             first = self.first_name_txt.GetValue()
             last = self.last_name_txt.GetValue()
             directory = self.dirname
@@ -529,6 +573,8 @@ class Dialog1(wx.Dialog):
          
         directory = self.dirname
         text_file = open("%s/%s_%s.txt" % (directory, first, last), "a")
+        setting = self.setting_get.GetValue()
+        text_file.write("\nSETTING EVENTS: \n%s" % setting) 
         text_file.write('\n')
         text_file.write('FINAL OBSERVATION NOTES:')
         text_file.write('\n')
@@ -572,10 +618,55 @@ class Dialog1(wx.Dialog):
         text_file.write("%s" % (date_time))
         text_file.write("\n\n\n\nSIGNED:______________________________________\n") 
         text_file.write("         %s" % observer) 
-        print interval_labels
         self.Close(True) 
         self.Destroy()
         
+        
+    def OnAboutBox(self, e):
+        
+        description = """FBA Machine is an application, written in Python, 
+designed to make Time on Task and repetitive event observations more accurate 
+and official looking. Its intended users are special educators and school psychologists. 
+FBA Machine outputs to .csv and .txt so that the user will have access to the maximum number of 
+programs in which to manipulate their data. It is recommended the .txt file 
+be opened in either a word processor or text editor and that the .csv be 
+opened in a spreadsheet editor. 
+
+This software is intended to be freely distributed and should remain free for all to
+use and modify. It would be immoral for me to try to sell this considering I developed 
+it entirely using free and open-source tools. I hope you'll find this application useful.
+And don't hold your breath waiting for this to be a smartphone app. You'd look awfully 
+conspicuous poking away at your smart phone in a classroom, wouldn't you?  
+"""
+
+        licence = """FBA Machine is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>."""
+
+
+        info = wx.AboutDialogInfo()
+
+        
+        info.SetName('FBA Machine')
+        info.SetVersion('1.0')
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2012 Josef Hoffman')
+        info.SetWebSite('http://www.puddletownindie.com')
+        info.SetLicence(licence)
+        info.AddDeveloper('Josef Hoffman\nThe Entire Open Source Community')
+        info.AddDocWriter('Josef Hoffman')
+        
+
+        wx.AboutBox(info)        
         
 if __name__ == "__main__":
     behavior_observation = wx.PySimpleApp(0)
