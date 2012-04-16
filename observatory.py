@@ -24,16 +24,17 @@ ot = [] #First statement in time_event sticks the system time up here as an inte
 oft = [] #Oops, I repeated myself. Forgive me; I'm new at this. Does the same thing as ot, but for the next two if statements.
 OnTask = ['On Task' ] #gets written to css
 OffTask = ['Off Task' ]#to css 
-off=[] #stores integer everytime off_task if statement is run, "length" counts how long it is and is used to return the integer to the user	
+off=[] #stores integer everytime off_task if statement is run, "length" counts how long it is and is used to return the integer to the user 
 on=[] #same as above, only for the other if statement. 
-ontotal=[] #store total number of events to place at bottom of txt file	
+ontotal=[] #store total number of events to place at bottom of txt file 
 offtotal=[]
+
 
 #These lists stor all the values needed for the redirect and repetitive event counters.
 slf_rdr=["SELF"] #Writes to the csv file, also used to track number of redirects 
-peer_rdr=["PEER"] #same functionality as above, different event	
+peer_rdr=["PEER"] #same functionality as above, different event 
 tchr_rdr=["TEACHER"] #''
-rdr_peer=["REDIRECTED"] #''			
+rdr_peer=["REDIRECTED"] #''         
 redirect_times=[] #stores the system time of each redirect
 redirect_interval=[] #stores the intervals between each redirect event 
 interval_labels=[] #gives me labels 'self' 'teacher' 'peer' to help me label the intervals inside the csv file 
@@ -50,11 +51,14 @@ rpt2n=[]
 rpt3n=[]
 
 # I had wxGlade do most of the layout yak shaving for me. I must admit I'm impressed with the results. 
-class Dialog1(wx.Dialog):
+class Dialog1(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: Dialog1.__init__
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE
-        wx.Dialog.__init__(self, *args, **kwds)
+        wx.Frame.__init__(self, *args, **kwds)
+        
+        #panel = wx.Panel(self, -1)
+        #panel.SetFocus()
+        #panel.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.welcome = wx.StaticText(self, -1, "Thank you for using FBA Machine. \nStart by entering the first and last \nnames of the student and then your name.")
         self.first_name_txt = wx.TextCtrl(self, -1, "Enter Student First Name Here")
         self.last_name_txt = wx.TextCtrl(self, -1, "Enter Student Last Name Here")
@@ -63,7 +67,8 @@ class Dialog1(wx.Dialog):
         self.save_names = wx.Button(self, -1, "Fill Out Information Above, Then Press Here")
         self.label_directions = wx.StaticText(self, -1, "The widget underneath this message\nis the task timer. Push the \"TIME\" button \nand see what happens.")
         self.static_line_2 = wx.StaticLine(self, -1)
-        self.time_button = wx.Button(self, -1, "TIME")
+        self.time_button = wx.Button(self, -1, "On-Task (-)")
+        self.time_off_button = wx.Button(self, -1, 'Off-Task (=)')
         self.notes_box = wx.TextCtrl(self, -1, "\n", style=wx.TE_MULTILINE|wx.TE_LINEWRAP|wx.TE_WORDWRAP)
         self.save_quit = wx.Button(self, -1, "Save and Quit")
         self.re_title = wx.StaticText(self, -1, "Record Repetitive Events")
@@ -103,6 +108,7 @@ class Dialog1(wx.Dialog):
         
 #Back to my code again. These keep the user from interacting with the application before they've told it where to save their files. 
         self.time_button.Enable(False)
+        self.time_off_button.Enable(False)
         self.save_quit.Enable(False)
         self.slf_rd_btn.Enable(False)
         self.tch_rd_btn.Enable(False)
@@ -113,7 +119,8 @@ class Dialog1(wx.Dialog):
         self.count_3.Enable(False)
          
 #Binding all the buttons to a function. 
-        self.Bind(wx.EVT_BUTTON, self.time_event, self.time_button)
+        self.Bind(wx.EVT_BUTTON, self.start_on_task, self.time_button)
+        self.Bind(wx.EVT_BUTTON, self.start_off_task, self.time_off_button)
         self.Bind(wx.EVT_BUTTON, self.filefunc, self.save_quit)
         self.Bind(wx.EVT_BUTTON, self.header, self.save_names)
         self.Bind(wx.EVT_BUTTON, self.self_redirect, self.slf_rd_btn)
@@ -124,15 +131,17 @@ class Dialog1(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.repeat_behavior_2, self.count_2) 
         self.Bind(wx.EVT_BUTTON, self.repeat_behavior_3, self.count_3)
         self.Bind(wx.EVT_BUTTON, self.OnAboutBox, self.about)
+        
  
 #More of the wxGlade free yak grooming service. My code starts again on line 222.         
     def __set_properties(self):
         # begin wxGlade: Dialog1.__set_properties
-        self.SetTitle("Behavior Observatory")
+        self.SetTitle("FBA Analysis Machine")
         self.first_name_txt.SetMinSize((250, 28))
         self.last_name_txt.SetMinSize((250, 28))
         self.observer_first.SetMinSize((200, 28))
-        self.time_button.SetMinSize((300, 30))
+        self.time_button.SetMinSize((150, 30))
+        self.time_off_button.SetMinSize((150, 30))
         self.notes_box.SetMinSize((300, 150))
         self.save_quit.SetMinSize((300, 30))
         self.re_txt_1.SetMinSize((160, 28))
@@ -153,6 +162,7 @@ class Dialog1(wx.Dialog):
         tch_rd = wx.BoxSizer(wx.HORIZONTAL)
         pr_rd = wx.BoxSizer(wx.HORIZONTAL)
         slf_rd = wx.BoxSizer(wx.HORIZONTAL)
+        timer_control = wx.BoxSizer(wx.HORIZONTAL)
         sizer_left = wx.BoxSizer(wx.VERTICAL)
         name_saver_sz = wx.BoxSizer(wx.HORIZONTAL)
         observer_name_sz = wx.BoxSizer(wx.HORIZONTAL)
@@ -170,7 +180,10 @@ class Dialog1(wx.Dialog):
         sizer_left.Add(name_saver_sz, 1, wx.EXPAND, 0)
         sizer_left.Add(self.label_directions, 0, 0, 0)
         sizer_left.Add(self.static_line_2, 0, wx.EXPAND, 0)
-        sizer_left.Add(self.time_button, 0, 0, 0)
+        sizer_left.Add(timer_control, 1, wx.EXPAND, 0)
+        timer_control.Add(self.time_button, 0, 0, 0)
+        timer_control.Add(self.time_off_button, 0, 0, 0) 
+        #sizer_left.Add(self.time_button, 0, 0, 0)
         sizer_left.Add(self.notes_box, 0, 0, 0)
         sizer_left.Add(self.save_quit, 0, 0, 0)
         sizer_main.Add(sizer_left, 0, wx.ALL, 3)
@@ -217,7 +230,19 @@ class Dialog1(wx.Dialog):
         sizer_main.Fit(self)
         self.Layout()
         # end wxGlade
-       
+    
+
+        timer_id = wx.NewId()
+        end_timer = wx.NewId()
+        
+        self.Bind(wx.EVT_MENU, self.start_off_task, id=end_timer) 
+           
+        self.Bind(wx.EVT_MENU, self.start_on_task, id=timer_id) 
+        self.accel_tbl = wx.AcceleratorTable([(wx.ACCEL_NORMAL, ord('-'), timer_id),
+                                               (wx.ACCEL_NORMAL, ord('='), end_timer)])
+        self.SetAcceleratorTable(self.accel_tbl) 
+        
+        
         
 # end of class Dialog1
 #Thank you wxGlade! 
@@ -248,6 +273,7 @@ class Dialog1(wx.Dialog):
         
         #Now the program knows where to put its files. You may interact with it now. 
         self.time_button.Enable(True)
+        self.time_off_button.Enable(True) 
         self.save_quit.Enable(True)
         self.slf_rd_btn.Enable(True)
         self.tch_rd_btn.Enable(True)
@@ -260,16 +286,14 @@ class Dialog1(wx.Dialog):
         self.first_name_txt.Enable(False)
         self.save_names.Enable(False) 
         self.observer_first.Enable(False)    
-
-    def time_event(self, event):
-        a.append(1) #Could be an integer, or whatever. It's just a way to record how many times this function has run. 
-        countfinal = len(a) #Count the number of integers in the list
-        if countfinal > 3: #It's cyclical! I want it to start over each time. This also gives me the flexibility to adjust how things operate. 
-            del a[0:]
-          
-                 
-        
-        if countfinal == 1:  		
+    
+ 
+            
+    def start_on_task(self, event):
+        if len(ot) == 0:
+            self.time_button.Enable(False)
+            self.time_off_button.Enable(True)
+            self.time_off_button.SetFocus()
             on_start = time.time() #get system time
             ot.append(on_start) #put it in a list
             self.welcome.SetLabel("Timing On Task Event") #tell the user what's happening 
@@ -280,23 +304,75 @@ class Dialog1(wx.Dialog):
             size = 18 #How big I want the font
             font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) #Linux doesn't care about all this explicit stuff, but Windows sure does.  
             self.label_directions.SetFont(font) #Make the font big 
-            self.save_quit.Enable(False) #Don't want them exiting out early                   
-            
-        if countfinal == 2: #This function is more complicated because it has to do file operations, or else we lose all our work.  
+            #self.save_quit.Enable(False) #Don't want them exiting out early                   
+            #self.time_button.SetLabel("Click or Press \"-\" to toggle") 
+          
+#Save the previous off-task event
+        if len(oft) > 0:
+            off_taskraw = on_start - oft.pop()
+            off_task = round(off_taskraw, 2)
+            offtotal.append(off_task)  
+            OffTask.append(off_task)
+            #self.SetBackgroundColour(wx.LIGHT_GREY)
+            #self.Refresh()
+            notes2 = self.notes_box.GetValue()
+            #self.welcome.SetLabel("Timed Off-Task Event") 
+            #size = 10 
+            #font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+            #self.label_directions.SetFont(font)
+            #self.label_directions.SetLabel("Click TIME to record on-task event")  
+            first = self.first_name_txt.GetValue()
+            last = self.last_name_txt.GetValue()
+            directory = self.dirname
+            text_file = open("%s/%s_%s.txt" % (directory, first, last), "a") 
+            length = len(off)
+            date_time = strftime("%H:%M:%S")
+            text_file.write("\n") 
+            text_file.write("OFF TASK EVENT#%s Interval Time: %s sec  Time of Day: %s" % (length, off_task, date_time))
+            text_file.write('\n') 
+            text_file.write("==>%s" % (notes2))
+            text_file.write('\n')
+            text_file.write('-----------------------------------------------------------')
+            text_file.write('\n')
+            text_file.write('\nBEGIN ON TASK RECORDING:\n')
+            self.notes_box.Clear()
+            #self.save_quit.Enable(True) 
+            #self.time_event(event)
+
+    
+        
+    def start_off_task(self, event):
+        if len(oft) == 0: 
+            self.time_button.Enable(True)
+            self.time_off_button.Enable(False)
+            self.time_button.SetFocus()
             on_stop = time.time() #get system time again
+            oft.append(on_stop) 
+            self.SetBackgroundColour(wx.RED) 
+            self.Refresh()
+            size = 18 
+            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+            self.label_directions.SetFont(font)
+            self.welcome.SetLabel("Timing Off Task Event")
+            self.label_directions.SetLabel("Timing off-task event\nRecord Notes Below") 
+            off.append(1)
+            #self.save_quit.Enable(False)
+          
+#Save the last on-task event
+        if len(ot) > 0:
             on_taskraw = on_stop - ot.pop() #subtract the system time from up the previous if statement
             on_task = round(on_taskraw, 2) #Make it user friendly
             OnTask.append(on_task) #Stick it in a list 
             ontotal.append(on_task) #Going to sum this one up when we're done. Looks like I repeated myself again.
                 
-            self.SetBackgroundColour(wx.LIGHT_GREY) #Dear User: Nothing is happening. 
-            self.Refresh() #I hate you Windows. 
-            self.welcome.SetLabel("Timed On-Task Event") #You did? 
-            size = 10 
-            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
-            self.label_directions.SetFont(font)
-            self.label_directions.SetLabel("Click TIME to record off-task event")
-                         
+            #self.SetBackgroundColour(wx.LIGHT_GREY) #Dear User: Nothing is happening. 
+            #self.Refresh() #I hate you Windows. 
+            #self.welcome.SetLabel("Timed On-Task Event") #You did? 
+            #size = 12 
+            #font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
+            #self.label_directions.SetFont(font)
+            #self.label_directions.SetLabel("Task Timer Stopped. Record any final/nobservation notes in the text box/be sure to review and record any setting events/you may continue recording repetitive events")
+                            
             notes = self.notes_box.GetValue()
             first = self.first_name_txt.GetValue()
             last = self.last_name_txt.GetValue()
@@ -313,53 +389,8 @@ class Dialog1(wx.Dialog):
             text_file.write('\n')
             text_file.write("\nBEGIN OFF TASK RECORDING:\n")
             self.notes_box.Clear()
-            self.save_quit.Enable(True)#You can stop and save here if you wish. 
-            
-        #Does the same thing again, just puts things in different places.     
-        if countfinal == 3: 
-            start_off = time.time()
-            oft.append(start_off) 
-            self.SetBackgroundColour(wx.RED) 
-            self.Refresh()
-            size = 18 
-            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
-            self.label_directions.SetFont(font)
-            self.welcome.SetLabel("Timing Off Task Event")
-            self.label_directions.SetLabel("Timing off-task event\nRecord Notes Below") 
-            off.append(1)
-            self.save_quit.Enable(False) 
-            
-        if countfinal == 4: 
-            stop_off = time.time()
-            off_taskraw = stop_off - oft.pop()
-            off_task = round(off_taskraw, 2)
-            offtotal.append(off_task)  
-            OffTask.append(off_task)
-            self.SetBackgroundColour(wx.LIGHT_GREY)
-            self.Refresh()
-            notes2 = self.notes_box.GetValue()
-            self.welcome.SetLabel("Timed Off-Task Event") 
-            size = 10 
-            font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
-            self.label_directions.SetFont(font)
-            self.label_directions.SetLabel("Click TIME to record on-task event")  
-            first = self.first_name_txt.GetValue()
-            last = self.last_name_txt.GetValue()
-            directory = self.dirname
-            text_file = open("%s/%s_%s.txt" % (directory, first, last), "a") 
-            length = len(off)
-            date_time = strftime("%H:%M:%S")
-            text_file.write("\n") 
-            text_file.write("OFF TASK EVENT#%s Interval Time: %s sec  Time of Day: %s" % (length, off_task, date_time))
-            text_file.write('\n') 
-            text_file.write("==>%s" % (notes2))
-            text_file.write('\n')
-            text_file.write('-----------------------------------------------------------')
-            text_file.write('\n')
-            text_file.write('\nBEGIN ON TASK RECORDING:\n')
-            self.notes_box.Clear()
-            self.save_quit.Enable(True) 
-
+            #self.save_quit.Enable(True)#You can stop and save here if you wish.
+     
     def self_redirect(self, event): #Records the time a redirect happened in line with the on-task, off-task records and a tally summary appended to the bottom of the text file
         redirect_times.insert(0,0) #Insert a "0" into place one so that m2 doesn't return an error the first time this function is called. 
         m1 = time.time() #Record system time
@@ -467,7 +498,7 @@ class Dialog1(wx.Dialog):
          
         rpt1.append(repeat_tod) #make a tally
         rep1 = len(rpt1) - 1 #count the tallies, subtract one for the name
-        self.cnt_1.SetLabel("%s" % rep1) #set the label	the user sees
+        self.cnt_1.SetLabel("%s" % rep1) #set the label the user sees
         self.re_1_lbl.SetLabel("%s" % repeat_value) #advance the counter
         
         
@@ -580,10 +611,10 @@ class Dialog1(wx.Dialog):
         #get a whole bunch of totals to write in
         total_off = sum(offtotal)
         total_on = sum(ontotal) 
-        total_self = len(slf_rdr) #Get the number of self redirects that happened
-        total_peer = len(peer_rdr)
-        total_teacher = len(tchr_rdr) 
-        total_redirect_peer = len(rdr_peer)
+        total_self = len(slf_rdr) - 1
+        total_peer = len(peer_rdr) - 1
+        total_teacher = len(tchr_rdr) - 1 
+        total_redirect_peer = len(rdr_peer) - 1
         total_rpt1 = len(rpt1) 
         total_rpt2 = len(rpt2)
         total_rpt3 = len(rpt3) 
@@ -717,7 +748,7 @@ conspicuous poking away at your smart phone in a classroom, wouldn't you?
 if __name__ == "__main__":
     behavior_observation = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    dialog_3 = Dialog1(None, -1, "")
+    dialog_3 = Dialog1(None)
     behavior_observation.SetTopWindow(dialog_3)
     dialog_3.Show()
     behavior_observation.MainLoop()
