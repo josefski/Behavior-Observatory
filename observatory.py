@@ -19,7 +19,7 @@ import os.path
 #to store certain integer values and reliably count events that occur across multiple iterations 
 #of the same function.
  
-a = [] #time_event stores the integer "1" in this list every time it's called by the "TIME" button. 
+
 ot = [] #First statement in time_event sticks the system time up here as an integer, the second if statement pops it and subtracts it from the current system time
 oft = [] #Oops, I repeated myself. Forgive me; I'm new at this. Does the same thing as ot, but for the next two if statements.
 OnTask = ['On Task' ] #gets written to css
@@ -51,14 +51,11 @@ rpt2n=[]
 rpt3n=[]
 
 # I had wxGlade do most of the layout yak shaving for me. I must admit I'm impressed with the results. 
-class Dialog1(wx.Frame):
+class Dialog1(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: Dialog1.__init__
-        wx.Frame.__init__(self, *args, **kwds)
+        wx.Dialog.__init__(self, *args, **kwds)
         
-        #panel = wx.Panel(self, -1)
-        #panel.SetFocus()
-        #panel.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.welcome = wx.StaticText(self, -1, "Thank you for using FBA Machine. \nStart by entering the first and last \nnames of the student and then your name.")
         self.first_name_txt = wx.TextCtrl(self, -1, "Enter Student First Name Here")
         self.last_name_txt = wx.TextCtrl(self, -1, "Enter Student Last Name Here")
@@ -70,6 +67,7 @@ class Dialog1(wx.Frame):
         self.time_button = wx.Button(self, -1, "On-Task (-)")
         self.time_off_button = wx.Button(self, -1, 'Off-Task (=)')
         self.notes_box = wx.TextCtrl(self, -1, "\n", style=wx.TE_MULTILINE|wx.TE_LINEWRAP|wx.TE_WORDWRAP)
+        #self.stop_time_button = wx.Button(self, -1, "S\nt\no\np") 
         self.save_quit = wx.Button(self, -1, "Save and Quit")
         self.re_title = wx.StaticText(self, -1, "Record Repetitive Events")
         self.re_txt_1 = wx.TextCtrl(self, -1, "Repetitive Event")
@@ -117,6 +115,7 @@ class Dialog1(wx.Frame):
         self.count_1.Enable(False)
         self.count_2.Enable(False) 
         self.count_3.Enable(False)
+        #self.stop_time_button.Enable(False) 
          
 #Binding all the buttons to a function. 
         self.Bind(wx.EVT_BUTTON, self.start_on_task, self.time_button)
@@ -131,11 +130,14 @@ class Dialog1(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.repeat_behavior_2, self.count_2) 
         self.Bind(wx.EVT_BUTTON, self.repeat_behavior_3, self.count_3)
         self.Bind(wx.EVT_BUTTON, self.OnAboutBox, self.about)
+        #self.Bind(wx.EVT_BUTTON, self.stop_timing, self.stop_time_button) 
         
  
 #More of the wxGlade free yak grooming service. My code starts again on line 222.         
     def __set_properties(self):
         # begin wxGlade: Dialog1.__set_properties
+        
+        #Sets the dimensions of all the elements 
         self.SetTitle("FBA Analysis Machine")
         self.first_name_txt.SetMinSize((250, 28))
         self.last_name_txt.SetMinSize((250, 28))
@@ -143,6 +145,7 @@ class Dialog1(wx.Frame):
         self.time_button.SetMinSize((150, 30))
         self.time_off_button.SetMinSize((150, 30))
         self.notes_box.SetMinSize((300, 150))
+        #self.stop_time_button.SetMinSize((30, 150))
         self.save_quit.SetMinSize((300, 30))
         self.re_txt_1.SetMinSize((160, 28))
         self.re_txt_2.SetMinSize((160, 28))
@@ -163,11 +166,14 @@ class Dialog1(wx.Frame):
         pr_rd = wx.BoxSizer(wx.HORIZONTAL)
         slf_rd = wx.BoxSizer(wx.HORIZONTAL)
         timer_control = wx.BoxSizer(wx.HORIZONTAL)
+        #notes_sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer_left = wx.BoxSizer(wx.VERTICAL)
         name_saver_sz = wx.BoxSizer(wx.HORIZONTAL)
         observer_name_sz = wx.BoxSizer(wx.HORIZONTAL)
         last_name_sz = wx.BoxSizer(wx.HORIZONTAL)
         first_name_sz = wx.BoxSizer(wx.HORIZONTAL)
+        
+        #Big sizer on the left side
         sizer_left.Add(self.welcome, 0, 0, 0)
         first_name_sz.Add(self.first_name_txt, 0, 0, 0)
         sizer_left.Add(first_name_sz, 1, 0, 0)
@@ -182,11 +188,14 @@ class Dialog1(wx.Frame):
         sizer_left.Add(self.static_line_2, 0, wx.EXPAND, 0)
         sizer_left.Add(timer_control, 1, wx.EXPAND, 0)
         timer_control.Add(self.time_button, 0, 0, 0)
-        timer_control.Add(self.time_off_button, 0, 0, 0) 
-        #sizer_left.Add(self.time_button, 0, 0, 0)
+        timer_control.Add(self.time_off_button, 0, 0, 0)
+        #sizer_left.Add(notes_sizer, 1, wx.EXPAND, 0)
+        #notes_sizer.Add(self.notes_box, 0, 0, 0)
         sizer_left.Add(self.notes_box, 0, 0, 0)
         sizer_left.Add(self.save_quit, 0, 0, 0)
         sizer_main.Add(sizer_left, 0, wx.ALL, 3)
+        
+        #sizer on the right side
         rpt_events_sz.Add(self.re_title, 0, 0, 0)
         rpt_events_sz.Add(self.re_txt_1, 0, 0, 0)
         rpt_events_sz.Add(self.count_1, 0, 0, 0)
@@ -196,6 +205,8 @@ class Dialog1(wx.Frame):
         rpt_events_sz.Add(self.count_3, 0, 0, 0)
         rpt_events_sz.Add(self.static_line_rep, 0, wx.ALL|wx.EXPAND, 0)
         rpt_events_sz.Add(self.rd_title, 0, 0, 0)
+        
+        #Non-user assignable Buttons and Counters in the middle on the bottom
         slf_rd.Add(self.slf_rd_btn, 0, 0, 0)
         slf_rd.Add(self.slf_rd_cnt, 0, 0, 0)
         rpt_events_sz.Add(slf_rd, 1, wx.EXPAND, 0)
@@ -209,6 +220,8 @@ class Dialog1(wx.Frame):
         rd_pr.Add(self.rd_pr_cnt, 0, 0, 0)
         rpt_events_sz.Add(rd_pr, 1, wx.EXPAND, 0)
         rpt_events_sz.Add(self.hint, 0, 0, 0)
+        
+        #The user assignable repetitive events. 
         sizer_main.Add(rpt_events_sz, 0, wx.ALL, 3)
         rpt_events_ct_sz.Add(self.re_1_lbl, 0, 0, 0)
         rpt_events_ct_sz.Add(self.cnt_1, 0, 0, 0)
@@ -219,9 +232,13 @@ class Dialog1(wx.Frame):
         rpt_events_ct_sz.Add((205, 20), 0, 0, 0)
         rpt_events_ct_sz.Add(self.setting_events, 0, 0, 0)
         rpt_events_ct_sz.Add(self.setting_get, 0, 0, 0)
+        
+        #About and Help Buttons
         rpt_events_ct_sz.Add(self.help, 0, 0, 0)
         rpt_events_ct_sz.Add(self.about, 0, 0, 0)
         rpt_events_ct_sz.Add((205, 30), 0, 0, 0)
+        
+        #copyright and some flair courtesy of GPL
         sizer_1.Add(self.Copyright, 0, 0, 0)
         sizer_1.Add(self.bitmap_1, 0, 0, 0)
         rpt_events_ct_sz.Add(sizer_1, 1, wx.EXPAND, 0)
@@ -231,12 +248,11 @@ class Dialog1(wx.Frame):
         self.Layout()
         # end wxGlade
     
-
+        #Accelerator Table for the  - and = keys. If statement at the beginning of 
+        #each line keeps these from being able to run the functions twice sequentially. 
         timer_id = wx.NewId()
         end_timer = wx.NewId()
-        
-        self.Bind(wx.EVT_MENU, self.start_off_task, id=end_timer) 
-           
+        self.Bind(wx.EVT_MENU, self.start_off_task, id=end_timer)   
         self.Bind(wx.EVT_MENU, self.start_on_task, id=timer_id) 
         self.accel_tbl = wx.AcceleratorTable([(wx.ACCEL_NORMAL, ord('-'), timer_id),
                                                (wx.ACCEL_NORMAL, ord('='), end_timer)])
@@ -285,12 +301,19 @@ class Dialog1(wx.Frame):
         self.last_name_txt.Enable(False) 
         self.first_name_txt.Enable(False)
         self.save_names.Enable(False) 
-        self.observer_first.Enable(False)    
+        self.observer_first.Enable(False)
+            
     
  
-            
+    def stop_timing(self, event): 
+        self.start_on_task(event)
+        self.start_off_task(event)
+        self.SetBackgroundColour(wx.LIGHT_GREY) 
+        self.label_directions.SetLabel("Finished Timing\nClick \"Save and Quit\" to exit")
+    
     def start_on_task(self, event):
-        if len(ot) == 0:
+        if len(ot) == 0:#Keep this from running when the list is empty AND keep the accelerator from running it twice in a row
+            #self.stop_time_button.Enable(True) 
             self.time_button.Enable(False)
             self.time_off_button.Enable(True)
             self.time_off_button.SetFocus()
@@ -304,11 +327,9 @@ class Dialog1(wx.Frame):
             size = 18 #How big I want the font
             font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) #Linux doesn't care about all this explicit stuff, but Windows sure does.  
             self.label_directions.SetFont(font) #Make the font big 
-            #self.save_quit.Enable(False) #Don't want them exiting out early                   
-            #self.time_button.SetLabel("Click or Press \"-\" to toggle") 
-          
+            
 #Save the previous off-task event
-        if len(oft) > 0:
+        if len(oft) > 0:#This if statement keeps it from returning an error if I try to pop from an empty list. 
             off_taskraw = on_start - oft.pop()
             off_task = round(off_taskraw, 2)
             offtotal.append(off_task)  
@@ -336,13 +357,10 @@ class Dialog1(wx.Frame):
             text_file.write('\n')
             text_file.write('\nBEGIN ON TASK RECORDING:\n')
             self.notes_box.Clear()
-            #self.save_quit.Enable(True) 
-            #self.time_event(event)
-
-    
-        
+          
     def start_off_task(self, event):
         if len(oft) == 0: 
+            #self.stop_time_button.Enable(False)  
             self.time_button.Enable(True)
             self.time_off_button.Enable(False)
             self.time_button.SetFocus()
@@ -356,8 +374,7 @@ class Dialog1(wx.Frame):
             self.welcome.SetLabel("Timing Off Task Event")
             self.label_directions.SetLabel("Timing off-task event\nRecord Notes Below") 
             off.append(1)
-            #self.save_quit.Enable(False)
-          
+            
 #Save the last on-task event
         if len(ot) > 0:
             on_taskraw = on_stop - ot.pop() #subtract the system time from up the previous if statement
@@ -365,13 +382,6 @@ class Dialog1(wx.Frame):
             OnTask.append(on_task) #Stick it in a list 
             ontotal.append(on_task) #Going to sum this one up when we're done. Looks like I repeated myself again.
                 
-            #self.SetBackgroundColour(wx.LIGHT_GREY) #Dear User: Nothing is happening. 
-            #self.Refresh() #I hate you Windows. 
-            #self.welcome.SetLabel("Timed On-Task Event") #You did? 
-            #size = 12 
-            #font = wx.Font(size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL) 
-            #self.label_directions.SetFont(font)
-            #self.label_directions.SetLabel("Task Timer Stopped. Record any final/nobservation notes in the text box/be sure to review and record any setting events/you may continue recording repetitive events")
                             
             notes = self.notes_box.GetValue()
             first = self.first_name_txt.GetValue()
@@ -551,6 +561,8 @@ class Dialog1(wx.Frame):
         
         
     def filefunc(self, event): #Writes the contents of the task lists to the .csv file and appends all the summary information to the text file.
+        self.start_on_task(event) 
+        self.start_off_task(event) 
         lenr = len(redirect_interval) #the three pre-defined redirect intervals
         if lenr > 0: #The conditional is here in case the observer doesn't record redirects. 
             redirect_interval.pop(0) #The first value in the list is a giant number, because the number subtracted from it was 0

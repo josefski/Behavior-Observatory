@@ -49,4 +49,10 @@ April 15th, 2012
 
 Made the UI for the task timer operate from two different buttons instead of one. Got rid of the ambiguous grey zone between events. Split the main timer function into two separate functions bound to each button as well as the - and = keys on the keyboard using and accelerator table. Used SetFocus() on the off-task on-task buttons so that the enter key acts as a toggle if left on the buttons. Used a little trickery to make so that hitting the same accelerator key twice in a row can't cause that same function to iterate again. The same timing function should NEVER run sequentially. 
 
+*********************************************************************************************************
+
+April 16th, 2012
+
+Tested the app in the classroom today. Definite learning curve to using it correctly. I'll need to practice and maybe consult with a psych on the best events to include for the repetitive events. 
+
 ********************************************************************************************************* 
