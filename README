@@ -55,4 +55,12 @@ April 16th, 2012
 
 Tested the app in the classroom today. Definite learning curve to using it correctly. I'll need to practice and maybe consult with a psych on the best events to include for the repetitive events. 
 
-********************************************************************************************************* 
+*********************************************************************************************************
+
+May 30th, 2012
+
+It's distributed!!!! 
+
+There are now two versions of this app available for download, a Windows and a Mac version, and they are both HUGE files. I've added an Icon file to the repository, but obviously the actual icons in the .exe and setup files are converted to their respective op-system compatible formats. I tried to figure out how to create a distributable package in Linux but I finally had to give up when my head spun an entire 360 degrees and I started vomiting green. I'll make the .deb package available on sourceforge for anyone who wants to build their own package. 
+
+I will not be detailing the process of porting the app over to the two commercial op-systems. Needless to say it was painful, demoralizing, and infuriating. I care not to relive it. 
